@@ -3,4 +3,5 @@ uvicorn
 groq
 python-multipart
 pydantic
+pydantic-settings
 python-dotenv
