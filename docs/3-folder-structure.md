@@ -1,0 +1,32 @@
+**REVELIO**
+
+**Project Folder Structure**
+
+# **Full Directory Tree**
+
+All files and folders are listed below with inline annotations explaining the purpose of each.
+
+| revelio/<br>├── backend/<br>│   ├── app/<br>│   │   ├── api/<br>│   │   │   ├── routes/<br>│   │   │   │   ├── __init__.py<br>│   │   │   │   ├── health.py              # GET /health<br>│   │   │   │   ├── transcribe.py          # POST /transcribe<br>│   │   │   │   ├── suggestions.py         # POST /suggestions<br>│   │   │   │   └── chat.py                # POST /chat (streaming)<br>│   │   │   ├── schemas/<br>│   │   │   │   ├── __init__.py<br>│   │   │   │   ├── transcribe.py          # TranscribeRequest, TranscribeResponse<br>│   │   │   │   ├── suggestions.py         # SuggestionCard, SuggestionsResponse<br>│   │   │   │   └── chat.py                # ChatMessage, ChatRequest<br>│   │   │   └── __init__.py<br>│   │   ├── core/<br>│   │   │   ├── __init__.py<br>│   │   │   └── config.py                  # Env vars, model names, defaults<br>│   │   ├── services/<br>│   │   │   ├── __init__.py<br>│   │   │   ├── groq_client.py             # Shared Groq SDK instance<br>│   │   │   ├── transcription.py           # Whisper call logic<br>│   │   │   ├── suggestions.py             # Suggestion prompt + Groq call<br>│   │   │   └── chat.py                    # Chat prompt + streaming call<br>│   │   ├── utils/<br>│   │   │   ├── __init__.py<br>│   │   │   └── prompt_builder.py          # Builds prompts from transcript context<br>│   │   ├── data/<br>│   │   │   └── __init__.py<br>│   │   ├── models/<br>│   │   │   └── __init__.py<br>│   │   ├── tests/<br>│   │   │   └── __init__.py<br>│   │   ├── main.py                        # App entry, CORS, router registration<br>│   │   └── __init__.py<br>│   ├── .env                               # Local secrets (gitignored)<br>│   ├── .env.example                       # Template with placeholder values<br>│   ├── .gitignore<br>│   └── requirements.txt<br>├── frontend/<br>│   ├── public/<br>│   │   └── dummy.txt<br>│   ├── src/<br>│   │   ├── assets/<br>│   │   │   └── dummy.txt<br>│   │   ├── components/<br>│   │   │   ├── transcript/<br>│   │   │   │   ├── TranscriptPanel.tsx    # Left column wrapper<br>│   │   │   │   ├── MicButton.tsx          # Start/stop mic control<br>│   │   │   │   └── TranscriptFeed.tsx     # Scrolling transcript lines<br>│   │   │   ├── suggestions/<br>│   │   │   │   ├── SuggestionsPanel.tsx   # Middle column wrapper<br>│   │   │   │   ├── SuggestionBatch.tsx    # Group of 3 suggestion cards<br>│   │   │   │   └── SuggestionCard.tsx     # Card with type label + preview<br>│   │   │   ├── chat/<br>│   │   │   │   ├── ChatPanel.tsx          # Right column wrapper<br>│   │   │   │   ├── ChatMessage.tsx        # Single message bubble<br>│   │   │   │   └── ChatInput.tsx          # Text input + send button<br>│   │   │   └── settings/<br>│   │   │       ├── SettingsModal.tsx      # Full-screen settings overlay<br>│   │   │       └── SettingsForm.tsx       # API key + editable prompt fields<br>│   │   ├── store/<br>│   │   │   ├── transcriptStore.ts         # Zustand: transcript chunks<br>│   │   │   ├── suggestionsStore.ts        # Zustand: suggestion batches<br>│   │   │   ├── chatStore.ts               # Zustand: chat history<br>│   │   │   └── settingsStore.ts           # Zustand: API key, prompts, config<br>│   │   ├── hooks/<br>│   │   │   ├── useMic.ts                  # MediaRecorder logic + chunking<br>│   │   │   ├── useSuggestions.ts          # Auto-refresh + manual refresh<br>│   │   │   └── useChat.ts                 # Send message, handle streaming<br>│   │   ├── services/<br>│   │   │   └── api.ts                     # Axios instance + all API calls<br>│   │   ├── pages/<br>│   │   │   └── Landing.tsx                # Main page with 3-column layout<br>│   │   ├── sections/<br>│   │   │   └── dummy.txt<br>│   │   ├── styles/<br>│   │   │   └── global.css<br>│   │   ├── App.tsx<br>│   │   └── main.tsx<br>│   ├── .gitignore<br>│   ├── eslint.config.js<br>│   ├── index.html<br>│   ├── package.json<br>│   ├── tsconfig.app.json<br>│   ├── tsconfig.json<br>│   ├── tsconfig.node.json<br>│   └── vite.config.ts<br>├── .env.example<br>├── .gitignore<br>└── README.md |
+| --- |
+
+# **Key Design Decisions**
+
+## **Backend: services/ mirrors routes/**
+
+Each route file has a corresponding service file. Routes handle HTTP only. Services own the business logic. This makes it easy to swap or iterate on prompt logic without touching the API layer.
+
+## **Backend: prompt_builder.py is isolated**
+
+All prompt construction lives in one utility file. This is the most iterated-on code in the whole project (prompt engineering is the core challenge), so keeping it isolated makes iteration fast and clean.
+
+## **Frontend: store/ is flat, one file per domain**
+
+Four Zustand stores, each owning one slice of state: transcript, suggestions, chat, settings. No nested stores, no cross-store subscriptions. Clean boundaries.
+
+## **Frontend: hooks/ owns all side effects**
+
+MediaRecorder logic, auto-refresh timers, and streaming chat responses all live in custom hooks. Components stay purely presentational.
+
+## **Frontend: services/api.ts is the single network layer**
+
+All Axios calls go through one file. The API key from settingsStore is injected via a request interceptor. No component or hook talks to the network directly.
