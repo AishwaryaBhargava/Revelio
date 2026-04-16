@@ -1,1 +1,4 @@
-# Pydantic models for transcribe request and response
+from pydantic import BaseModel
+
+class TranscribeResponse(BaseModel):
+    text: str

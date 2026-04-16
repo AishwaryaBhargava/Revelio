@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import api from '../services/api'
+import TranscriptPanel from '../components/transcript/TranscriptPanel'
 
 export default function Landing() {
   const [backendStatus, setBackendStatus] = useState('checking...')
@@ -15,12 +16,7 @@ export default function Landing() {
 
       {/* Left Column - Transcript */}
       <div className="flex flex-col w-1/3 border-r border-gray-800 p-4">
-        <div className="text-xs font-semibold text-gray-400 tracking-widest mb-4">
-          1. MIC & TRANSCRIPT
-        </div>
-        <div className="flex-1 overflow-y-auto text-sm text-gray-300">
-          Transcript will appear here...
-        </div>
+        <TranscriptPanel />
       </div>
 
       {/* Middle Column - Suggestions */}
