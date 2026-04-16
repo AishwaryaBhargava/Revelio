@@ -1,0 +1,1 @@
+# Pydantic models for suggestion cards and response

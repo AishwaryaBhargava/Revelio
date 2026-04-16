@@ -1,0 +1,1 @@
+# POST /chat - accepts message + transcript, returns streaming response

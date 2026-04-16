@@ -1,0 +1,1 @@
+# Pydantic models for transcribe request and response
