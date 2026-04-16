@@ -1,0 +1,1 @@
+// Main page with 3-column layout

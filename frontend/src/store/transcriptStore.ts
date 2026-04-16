@@ -1,0 +1,1 @@
+// Zustand store: transcript chunks

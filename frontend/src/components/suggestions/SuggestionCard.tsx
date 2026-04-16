@@ -1,0 +1,1 @@
+// Individual card with type label and preview
