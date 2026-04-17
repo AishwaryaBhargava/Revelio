@@ -9,7 +9,7 @@ Revelio is a real-time AI copilot that listens to your conversations and surface
 
 | | URL |
 |---|---|
-| Frontend | https://revelio-iota.vercel.app/ |
+| Frontend | https://revelio-iota.vercel.app |
 | Backend | https://revelio-d4r4.onrender.com |
 
 ---
@@ -35,7 +35,7 @@ uvicorn app.main:app --reload --port 8000
 ```bash
 cd frontend
 npm install
-cp .env.example .env   # set VITE_API_URL=http://localhost:8000
+cp .env.example .env.local   # set VITE_API_URL=http://localhost:8000
 npm run dev
 ```
 
@@ -62,14 +62,14 @@ Open [http://localhost:5173](http://localhost:5173), paste your Groq API key in 
 
 Revelio has three panels:
 
-**1. Mic and Transcript (left)**
+**1. Mic and Transcript (left / Transcript tab on mobile)**
 Audio is captured via the browser MediaRecorder API and chunked every 30 seconds. Each chunk is sent to the FastAPI backend which calls Groq Whisper Large V3 for transcription. The transcript appends in real time with timestamps and auto-scrolls.
 
-**2. Live Suggestions (middle)**
+**2. Live Suggestions (middle / Suggestions tab on mobile)**
 Every time a new transcript chunk arrives, Revelio sends the recent transcript context to Groq GPT-OSS 120B and generates exactly 3 suggestion cards. Each card has a type label (QUESTION TO ASK, TALKING POINT, ANSWER, FACT CHECK, or CLARIFICATION), a title, and a preview that is useful on its own without clicking. New batches stack on top, older ones fade below. Manual refresh is also available.
 
-**3. Chat (right)**
-Clicking a suggestion sends it to the chat panel with the full transcript as context and streams a detailed answer back token by token using Server-Sent Events. Users can also type questions directly. One continuous chat session per use, no login required.
+**3. Chat (right / Chat tab on mobile)**
+Clicking a suggestion sends the card title as a clean message to the chat panel with the full transcript and card context passed to the backend. Responses stream token by token using Server-Sent Events. Users can also type questions directly. One continuous chat session per use, no login required.
 
 ---
 
@@ -87,7 +87,7 @@ The suggestion prompt receives the last N words of transcript (default 400, conf
 The three cards can be a mix of types. The model is explicitly instructed not to always return the same mix -- it reads the context and picks what is most useful right now. Each preview is written to deliver value without requiring a click.
 
 ### Detailed Chat Answers
-The chat prompt receives the full transcript (not just recent context) plus the user message. The model is instructed to give a concise, grounded answer that directly references what was said in the conversation. Responses are 3-5 sentences maximum unless a list is genuinely needed. Generic padding is explicitly forbidden in the prompt.
+The chat prompt receives the full transcript (not just recent context) plus the user message and optional card context. The model is instructed to give a concise, grounded answer that directly references what was said in the conversation. Responses are 3-5 sentences maximum unless a list is genuinely needed.
 
 ### Context Window Defaults
 
@@ -99,6 +99,16 @@ The chat prompt receives the full transcript (not just recent context) plus the 
 | Chat max tokens | 1000 |
 
 All settings are editable in the Settings panel without touching code.
+
+---
+
+## Security
+
+- Every API request requires a Groq API key passed from the frontend via the `X-Groq-API-Key` header
+- The backend never falls back to the environment key for user requests
+- Missing key returns a 401 immediately
+- Invalid key triggers a blocking error modal on the frontend and auto-stops the mic
+- No API keys are hardcoded anywhere in the codebase
 
 ---
 
@@ -117,11 +127,11 @@ revelio/
 │           └── prompt_builder.py   # all prompt construction in one place
 └── frontend/
     └── src/
-        ├── components/        # transcript, suggestions, chat, settings
+        ├── components/        # transcript, suggestions, chat, settings, shared
         ├── store/             # 4 Zustand slices
-        ├── hooks/             # useMic, useSuggestions, useChat
+        ├── hooks/             # useMic, useSuggestions, useChat, useWindowSize
         ├── services/          # api.ts: single file for all backend calls
-        └── pages/             # Landing.tsx: main 3-column layout
+        └── pages/             # Landing.tsx: main layout (desktop + mobile)
 ```
 
 ---
@@ -132,7 +142,7 @@ revelio/
 
 | Variable | Description |
 |---|---|
-| `GROQ_API_KEY` | Your Groq API key |
+| `GROQ_API_KEY` | Your Groq API key (used for local dev only, not for user requests) |
 | `ALLOWED_ORIGINS` | Comma-separated allowed frontend origins |
 
 ### Frontend `.env.local`
@@ -149,7 +159,7 @@ revelio/
 Whisper works on complete audio segments. 30 second chunks give high accuracy at the cost of a slight lag. Real-time word-by-word streaming would require a different STT model and significantly more complexity. The tradeoff is intentional -- suggestion quality depends on having complete sentences to analyze.
 
 **Suggestions trigger on chunk arrival, not on a fixed timer**
-Rather than refreshing on a fixed 30 second timer regardless of whether new content exists, suggestions now trigger when a new transcript chunk arrives. This means suggestions are always grounded in new information and never redundantly re-analyze the same content.
+Rather than refreshing on a fixed 30 second timer regardless of whether new content exists, suggestions trigger when a new transcript chunk arrives. This means suggestions are always grounded in new information and never redundantly re-analyze the same content.
 
 **SSE instead of WebSockets for chat streaming**
 Server-Sent Events from FastAPI are simpler to implement and sufficient for single-direction streaming (server to client). WebSockets would add complexity with no benefit for this use case.
@@ -160,8 +170,11 @@ Session-only by design. The Export button covers the archival use case and produ
 **Groq-only**
 Both models are locked to Groq per the project spec. The service layer is abstracted so swapping providers in the future requires only changing the service files, not the routes or prompts.
 
-**Desktop-only layout**
-The current 3-column layout is optimized for 1280px+ screens. A responsive mobile layout with tab-based panel switching is a planned future improvement.
+**Desktop-first, mobile-responsive**
+The primary experience is the 3-column desktop layout. On screens below 1024px, the layout switches to a tab-based single-panel view with a bottom navigation bar and badges for new suggestions and chat messages.
+
+**Card context passed separately from user message**
+When a suggestion card is clicked, only the card title is shown as the user message in chat. The full card preview is passed to the backend as separate context. This keeps the chat readable while preserving response quality.
 
 ---
 
@@ -194,7 +207,7 @@ The Export button downloads a complete session JSON:
 
 ## Development Pipeline
 
-Built across 7 phases:
+Built across 9 phases:
 
 | Phase | Description |
 |---|---|
@@ -204,7 +217,9 @@ Built across 7 phases:
 | Phase 3 | Live suggestion generation and prompt engineering |
 | Phase 4 | Streaming chat with transcript context |
 | Phase 5 | Settings panel and session export |
-| Phase 6 | Polish, error handling, and deployment |
+| Phase 6 | UI redesign, polish, error handling, and deployment |
+| Phase 7 | Chat UX improvements -- clean suggestion click messages |
+| Phase 8 | Mobile responsive layout with tab navigation |
 
 ---
 
