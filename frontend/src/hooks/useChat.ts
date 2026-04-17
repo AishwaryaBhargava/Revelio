@@ -1,5 +1,4 @@
 import { useCallback } from 'react'
-import api from '../services/api'
 import { useChatStore } from '../store/chatStore'
 import { useTranscriptStore } from '../store/transcriptStore'
 

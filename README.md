@@ -10,7 +10,7 @@ Revelio is a real-time AI copilot that listens to your conversations and surface
 | | URL |
 |---|---|
 | Frontend | *(added after deploy)* |
-| Backend | *(added after deploy)* |
+| Backend | https://revelio-d4r4.onrender.com |
 
 ---
 
@@ -35,7 +35,7 @@ uvicorn app.main:app --reload --port 8000
 ```bash
 cd frontend
 npm install
-cp .env.example .env.local   # set VITE_API_URL=http://localhost:8000
+cp .env.example .env   # set VITE_API_URL=http://localhost:8000
 npm run dev
 ```
 
