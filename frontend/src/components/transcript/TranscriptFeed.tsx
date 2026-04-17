@@ -10,16 +10,20 @@ export default function TranscriptFeed() {
   }, [chunks])
 
   return (
-    <div className="flex-1 overflow-y-auto space-y-3">
+    <div className="hide-scrollbar" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
       {chunks.length === 0 ? (
-        <p className="text-gray-500 text-sm italic">
-          The transcript will appear here once you start recording...
+        <p style={{ fontSize: '13px', color: 'var(--text-dim)', fontStyle: 'italic', lineHeight: 1.6 }}>
+          Start recording and your transcript will appear here in real time...
         </p>
       ) : (
         chunks.map((chunk, index) => (
-          <div key={index} className="text-sm">
-            <span className="text-gray-500 text-xs mr-2">{chunk.timestamp}</span>
-            <span className="text-gray-200">{chunk.text}</span>
+          <div key={index} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <span style={{ fontSize: '10px', color: 'var(--text-muted)', letterSpacing: '0.04em' }}>
+              {chunk.timestamp}
+            </span>
+            <p style={{ fontSize: '13px', color: 'var(--text-primary)', lineHeight: 1.7, margin: 0 }}>
+              {chunk.text}
+            </p>
           </div>
         ))
       )}

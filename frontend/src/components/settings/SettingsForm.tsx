@@ -2,6 +2,27 @@ import { useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 import { useSettingsStore } from '../../store/settingsStore'
 
+function Label({ children }: { children: string }) {
+  return (
+    <span style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.1em', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>
+      {children}
+    </span>
+  )
+}
+
+const inputStyle = {
+  width: '100%',
+  background: 'var(--bg-input)',
+  border: '1px solid var(--border)',
+  borderRadius: '8px',
+  padding: '10px 12px',
+  fontSize: '13px',
+  color: 'var(--text-primary)',
+  fontFamily: "'Outfit', sans-serif",
+  outline: 'none',
+  boxSizing: 'border-box' as const,
+}
+
 export default function SettingsForm() {
   const [showKey, setShowKey] = useState(false)
   const {
@@ -14,84 +35,74 @@ export default function SettingsForm() {
   } = useSettingsStore()
 
   return (
-    <div className="space-y-6">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
       <div>
-        <label className="block text-xs font-semibold text-gray-400 mb-1">
-          GROQ API KEY
-        </label>
-        <div className="flex items-center gap-2">
+        <Label>Groq API Key</Label>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <input
             type={showKey ? 'text' : 'password'}
             value={groqApiKey}
             onChange={(e) => setGroqApiKey(e.target.value)}
             placeholder="gsk_..."
-            className="flex-1 bg-gray-800 text-white text-sm rounded-lg px-3 py-2 outline-none placeholder-gray-500"
+            style={{ ...inputStyle, flex: 1 }}
           />
           <button
             onClick={() => setShowKey((prev) => !prev)}
-            className="text-gray-400 hover:text-white transition-colors p-2"
+            style={{ background: 'var(--bg-input)', border: '1px solid var(--border)', borderRadius: '8px', padding: '10px', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
           >
-            {showKey ? <EyeOff size={16} /> : <Eye size={16} />}
+            {showKey ? <EyeOff size={15} /> : <Eye size={15} />}
           </button>
         </div>
-        <p className="text-xs text-gray-500 mt-1">
+        <p style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '5px' }}>
           Get your key at console.groq.com
         </p>
       </div>
 
       <div>
-        <label className="block text-xs font-semibold text-gray-400 mb-1">
-          SUGGESTION PROMPT
-        </label>
+        <Label>Suggestion Prompt</Label>
         <textarea
           value={suggestionPrompt}
           onChange={(e) => setSuggestionPrompt(e.target.value)}
           rows={6}
-          className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2 outline-none resize-none"
+          style={{ ...inputStyle, resize: 'none' }}
         />
       </div>
 
       <div>
-        <label className="block text-xs font-semibold text-gray-400 mb-1">
-          CHAT PROMPT
-        </label>
+        <Label>Chat Prompt</Label>
         <textarea
           value={chatPrompt}
           onChange={(e) => setChatPrompt(e.target.value)}
           rows={4}
-          className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2 outline-none resize-none"
+          style={{ ...inputStyle, resize: 'none' }}
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
         <div>
-          <label className="block text-xs font-semibold text-gray-400 mb-1">
-            CONTEXT WINDOW (WORDS)
-          </label>
+          <Label>Context Window (words)</Label>
           <input
             type="number"
             value={contextWindowWords}
             onChange={(e) => setContextWindowWords(Number(e.target.value))}
-            className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2 outline-none"
+            style={inputStyle}
           />
         </div>
         <div>
-          <label className="block text-xs font-semibold text-gray-400 mb-1">
-            CHAT MAX TOKENS
-          </label>
+          <Label>Chat Max Tokens</Label>
           <input
             type="number"
             value={chatMaxTokens}
             onChange={(e) => setChatMaxTokens(Number(e.target.value))}
-            className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2 outline-none"
+            style={inputStyle}
           />
         </div>
       </div>
 
       <button
         onClick={resetToDefaults}
-        className="text-xs text-gray-500 hover:text-gray-300 underline"
+        style={{ background: 'none', border: 'none', color: 'var(--text-dim)', fontSize: '12px', cursor: 'pointer', textDecoration: 'underline', fontFamily: "'Outfit', sans-serif", textAlign: 'left', width: 'fit-content' }}
       >
         Reset to defaults
       </button>

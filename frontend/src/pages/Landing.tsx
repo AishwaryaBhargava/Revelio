@@ -5,21 +5,26 @@ import TranscriptPanel from '../components/transcript/TranscriptPanel'
 import SuggestionsPanel from '../components/suggestions/SuggestionsPanel'
 import ChatPanel from '../components/chat/ChatPanel'
 import SettingsModal from '../components/settings/SettingsModal'
+import Toast from '../components/Toast'
 import { useMic } from '../hooks/useMic'
 import { useSuggestions } from '../hooks/useSuggestions'
 import { useTranscriptStore } from '../store/transcriptStore'
 import { useSuggestionsStore } from '../store/suggestionsStore'
 import { useChatStore } from '../store/chatStore'
+import { useSettingsStore } from '../store/settingsStore'
+import revelioLogo from '../assets/revelio-logo.svg'
 
 export default function Landing() {
   const [backendStatus, setBackendStatus] = useState('checking...')
   const [pendingMessage, setPendingMessage] = useState<string | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
   const { isRecording, error, startMic, stopMic } = useMic()
   const { fetchSuggestions } = useSuggestions()
   const transcriptChunks = useTranscriptStore((s) => s.chunks)
   const suggestionBatches = useSuggestionsStore((s) => s.batches)
   const chatMessages = useChatStore((s) => s.messages)
+  const groqApiKey = useSettingsStore((s) => s.groqApiKey)
 
   useEffect(() => {
     api.get('/health')
@@ -35,7 +40,7 @@ export default function Landing() {
     const session = {
       exportedAt: new Date().toISOString(),
       transcript: transcriptChunks,
-      suggestionBatches: suggestionBatches,
+      suggestionBatches,
       chat: chatMessages,
     }
     const blob = new Blob([JSON.stringify(session, null, 2)], { type: 'application/json' })
@@ -48,72 +53,90 @@ export default function Landing() {
   }
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-gray-950 text-white overflow-hidden">
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', background: 'var(--bg-base)', color: 'var(--text-primary)', overflow: 'hidden', fontFamily: "'Outfit', sans-serif" }}>
 
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-gray-800 shrink-0">
-        <span className="text-lg font-bold tracking-wide">Revelio</span>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={handleExport}
-            className="flex items-center gap-2 px-3 py-1.5 rounded bg-gray-800 hover:bg-gray-700 text-sm text-white transition-all"
-          >
-            <Download size={14} />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 28px', height: '56px', borderBottom: '1px solid var(--border)', flexShrink: 0, background: 'var(--bg-panel)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <img src={revelioLogo} alt="Revelio logo" style={{ width: '32px', height: '32px' }} />
+          <span style={{ fontSize: '18px', fontWeight: 600, letterSpacing: '0.04em', color: 'var(--primary)' }}>Revelio</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <button onClick={handleExport} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 14px', borderRadius: '8px', border: '1px solid var(--border-light)', background: 'transparent', color: 'var(--text-secondary)', fontSize: '13px', fontFamily: "'Outfit', sans-serif", cursor: 'pointer', fontWeight: 500 }}>
+            <Download size={13} />
             Export
           </button>
-          <button
-            onClick={() => setSettingsOpen(true)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded bg-gray-800 hover:bg-gray-700 text-sm text-white transition-all"
-          >
-            <Settings size={14} />
+          <button onClick={() => setSettingsOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 14px', borderRadius: '8px', border: '1px solid var(--border-light)', background: 'transparent', color: 'var(--text-secondary)', fontSize: '13px', fontFamily: "'Outfit', sans-serif", cursor: 'pointer', fontWeight: 500 }}>
+            <Settings size={13} />
             Settings
           </button>
         </div>
       </div>
 
-      {/* Main 3-column layout */}
-      <div className="flex flex-1 overflow-hidden">
+      {/* API Key Warning */}
+      {!groqApiKey && (
+        <div style={{
+          background: 'rgba(142,212,196,0.1)',
+          borderBottom: '1px solid rgba(142,212,196,0.3)',
+          padding: '10px 28px',
+          fontSize: '12px',
+          color: '#e8fcf5',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#8ed4c4', flexShrink: 0 }} />
+            <span>No Groq API key set. Add your key in Settings before recording.</span>
+          </div>
+          <button
+            onClick={() => setSettingsOpen(true)}
+            style={{
+              background: 'rgba(110,187,168,0.15)',
+              border: '1px solid rgba(110,187,168,0.3)',
+              borderRadius: '6px',
+              color: '#e8fcf5',
+              fontSize: '12px',
+              cursor: 'pointer',
+              fontFamily: "'Outfit', sans-serif",
+              padding: '4px 10px',
+              flexShrink: 0,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            Open Settings
+          </button>
+        </div>
+      )}
 
-        {/* Left Column - Transcript */}
-        <div className="flex flex-col w-1/3 border-r border-gray-800 p-4 overflow-hidden">
-          <TranscriptPanel
-            isRecording={isRecording}
-            error={error}
-            startMic={startMic}
-            stopMic={stopMic}
-          />
+      {/* 3-column layout */}
+      <div style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+
+        {/* Left - Transcript */}
+        <div style={{ display: 'flex', flexDirection: 'column', width: '33.333%', borderRight: '1px solid var(--border)', padding: '20px', overflow: 'hidden' }}>
+          <TranscriptPanel isRecording={isRecording} error={error} startMic={startMic} stopMic={stopMic} />
         </div>
 
-        {/* Middle Column - Suggestions */}
-        <div className="flex flex-col w-1/3 border-r border-gray-800 p-4 overflow-hidden">
-          <SuggestionsPanel
-            isRecording={isRecording}
-            onCardClick={handleCardClick}
-            fetchSuggestions={fetchSuggestions}
-          />
+        {/* Middle - Suggestions */}
+        <div style={{ display: 'flex', flexDirection: 'column', width: '33.333%', borderRight: '1px solid var(--border)', padding: '20px', overflow: 'hidden', background: 'var(--bg-panel)' }}>
+          <SuggestionsPanel isRecording={isRecording} onCardClick={handleCardClick} fetchSuggestions={fetchSuggestions} />
         </div>
 
-        {/* Right Column - Chat */}
-        <div className="flex flex-col w-1/3 p-4 overflow-hidden">
-          <ChatPanel
-            pendingMessage={pendingMessage}
-            onPendingConsumed={() => setPendingMessage(null)}
-          />
+        {/* Right - Chat */}
+        <div style={{ display: 'flex', flexDirection: 'column', width: '33.333%', padding: '20px', overflow: 'hidden' }}>
+          <ChatPanel pendingMessage={pendingMessage} onPendingConsumed={() => setPendingMessage(null)} />
         </div>
 
       </div>
 
       {/* Backend status */}
-      <div className="fixed bottom-4 right-4 text-xs text-gray-500">
-        Backend: {backendStatus}
+      <div style={{ position: 'fixed', bottom: '12px', right: '16px', fontSize: '11px', color: 'var(--text-dim)', letterSpacing: '0.03em' }}>
+        {backendStatus === 'connected' ? '● connected' : '○ disconnected'}
       </div>
 
-      {/* Settings Modal */}
-      <SettingsModal
-        isOpen={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
-      />
-
+      {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} />}
+      <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </div>
   )
 }

@@ -1,0 +1,16 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Outer ring -->
+  <circle cx="100" cy="100" r="88" stroke="#6fbba8" stroke-width="2"/>
+  <!-- Middle ring -->
+  <circle cx="100" cy="100" r="60" stroke="#8ed4c4" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <!-- Eye shape -->
+  <path d="M30 100 Q100 45 170 100 Q100 155 30 100Z" stroke="#6fbba8" stroke-width="1.5" fill="none"/>
+  <!-- Iris -->
+  <circle cx="100" cy="100" r="22" stroke="#8ed4c4" stroke-width="1.5" fill="rgba(110,187,168,0.08)"/>
+  <!-- Pupil -->
+  <circle cx="100" cy="100" r="10" fill="#6fbba8"/>
+  <!-- Inner dot -->
+  <circle cx="100" cy="100" r="4" fill="#e8fcf5"/>
+  <!-- Light reflection -->
+  <circle cx="106" cy="94" r="2.5" fill="#e8fcf5" opacity="0.7"/>
+</svg>

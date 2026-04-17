@@ -8,48 +8,97 @@ interface Props {
   fetchSuggestions: () => void
 }
 
+function SkeletonCard() {
+  return (
+    <div style={{ border: '1px solid var(--border)', borderRadius: '10px', padding: '14px', background: 'var(--bg-card)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div style={{ height: '10px', width: '80px', background: 'var(--border-light)', borderRadius: '4px' }} />
+      <div style={{ height: '13px', width: '70%', background: 'var(--border)', borderRadius: '4px' }} />
+      <div style={{ height: '11px', width: '100%', background: 'var(--border)', borderRadius: '4px', opacity: 0.6 }} />
+      <div style={{ height: '11px', width: '85%', background: 'var(--border)', borderRadius: '4px', opacity: 0.4 }} />
+    </div>
+  )
+}
+
 export default function SuggestionsPanel({ isRecording, onCardClick, fetchSuggestions }: Props) {
   const { batches, isLoading } = useSuggestionsStore()
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="text-xs font-semibold text-gray-400 tracking-widest mb-4">
-        2. LIVE SUGGESTIONS
-      </div>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '16px' }}>
 
-      <div className="flex items-center justify-between mb-4">
-        <button
-          onClick={fetchSuggestions}
-          disabled={isLoading}
-          className="flex items-center gap-2 px-3 py-1.5 rounded bg-gray-800 hover:bg-gray-700 text-sm text-white disabled:opacity-50 transition-all"
-        >
-          <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
-          {isLoading ? 'Loading...' : 'Reload suggestions'}
-        </button>
-
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+        <span style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.12em', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+          Live Suggestions
+        </span>
         {isRecording && (
-          <span className="text-xs text-gray-500">
+          <span style={{ fontSize: '11px', color: 'var(--text-dim)' }}>
             auto-refresh on new transcript
           </span>
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto space-y-6">
-        {batches.length === 0 ? (
-          <p className="text-gray-500 text-sm italic">
+      <button
+        onClick={fetchSuggestions}
+        disabled={isLoading}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '7px',
+          padding: '8px 14px',
+          borderRadius: '8px',
+          border: '1px solid var(--border-light)',
+          background: 'transparent',
+          color: isLoading ? 'var(--text-dim)' : 'var(--text-secondary)',
+          fontSize: '12px',
+          fontFamily: "'Outfit', sans-serif",
+          fontWeight: 500,
+          cursor: isLoading ? 'not-allowed' : 'pointer',
+          flexShrink: 0,
+          width: 'fit-content',
+          transition: 'all 0.2s ease',
+        }}
+      >
+        <RefreshCw size={12} style={{ animation: isLoading ? 'spin 1s linear infinite' : 'none' }} />
+        {isLoading ? 'Loading...' : 'Reload suggestions'}
+      </button>
+
+      <div className="hide-scrollbar" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        {isLoading && batches.length === 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+          </div>
+        ) : batches.length === 0 ? (
+          <p style={{ fontSize: '13px', color: 'var(--text-dim)', fontStyle: 'italic', lineHeight: 1.6 }}>
             Start recording to see live suggestions...
           </p>
         ) : (
-          batches.map((batch, index) => (
-            <SuggestionBatch
-              key={index}
-              batch={batch}
-              isLatest={index === 0}
-              onCardClick={onCardClick}
-            />
-          ))
+          <>
+            {isLoading && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <SkeletonCard />
+                <SkeletonCard />
+                <SkeletonCard />
+              </div>
+            )}
+            {batches.map((batch, index) => (
+              <SuggestionBatch
+                key={index}
+                batch={batch}
+                isLatest={index === 0}
+                onCardClick={onCardClick}
+              />
+            ))}
+          </>
         )}
       </div>
+
+      <style>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   )
 }

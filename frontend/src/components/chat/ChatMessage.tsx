@@ -9,36 +9,41 @@ export default function ChatMessage({ message }: Props) {
   const isUser = message.role === 'user'
 
   return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-3`}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: isUser ? 'flex-end' : 'flex-start', gap: '4px' }}>
       <div
-        className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
-          isUser
-            ? 'bg-blue-600 text-white'
-            : 'bg-gray-800 text-gray-200'
-        }`}
+        style={{
+          maxWidth: '88%',
+          borderRadius: isUser ? '12px 12px 3px 12px' : '12px 12px 12px 3px',
+          padding: '10px 14px',
+          background: isUser ? 'rgba(110,187,168,0.15)' : 'var(--bg-card)',
+          border: isUser ? '1px solid rgba(110,187,168,0.25)' : '1px solid var(--border)',
+          fontSize: '13px',
+          lineHeight: 1.7,
+          color: 'var(--text-primary)',
+        }}
       >
         {isUser ? (
-          <p>{message.content}</p>
+          <p style={{ margin: 0 }}>{message.content}</p>
         ) : (
-          <div className="space-y-1">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             <ReactMarkdown
               components={{
-                p: ({ children }) => <p className="mb-1 leading-relaxed">{children}</p>,
-                strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>,
-                ul: ({ children }) => <ul className="list-disc list-inside space-y-0.5 mb-1">{children}</ul>,
-                ol: ({ children }) => <ol className="list-decimal list-inside space-y-0.5 mb-1">{children}</ol>,
-                li: ({ children }) => <li className="text-gray-200">{children}</li>,
-                code: ({ children }) => <code className="bg-gray-700 px-1 rounded text-xs">{children}</code>,
+                p: ({ children }) => <p style={{ margin: 0, lineHeight: 1.7 }}>{children}</p>,
+                strong: ({ children }) => <strong style={{ fontWeight: 600, color: 'var(--primary-mid)' }}>{children}</strong>,
+                ul: ({ children }) => <ul style={{ paddingLeft: '16px', margin: '4px 0', display: 'flex', flexDirection: 'column', gap: '2px' }}>{children}</ul>,
+                ol: ({ children }) => <ol style={{ paddingLeft: '16px', margin: '4px 0', display: 'flex', flexDirection: 'column', gap: '2px' }}>{children}</ol>,
+                li: ({ children }) => <li style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>{children}</li>,
+                code: ({ children }) => <code style={{ background: 'var(--bg-input)', padding: '1px 5px', borderRadius: '4px', fontSize: '12px', color: 'var(--primary-mid)' }}>{children}</code>,
               }}
             >
               {message.content}
             </ReactMarkdown>
           </div>
         )}
-        <div className={`text-xs mt-1 ${isUser ? 'text-blue-200' : 'text-gray-500'}`}>
-          {message.timestamp}
-        </div>
       </div>
+      <span style={{ fontSize: '10px', color: 'var(--text-dim)', padding: '0 4px' }}>
+        {message.timestamp}
+      </span>
     </div>
   )
 }

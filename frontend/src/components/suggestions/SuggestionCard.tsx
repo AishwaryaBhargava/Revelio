@@ -1,11 +1,37 @@
 import type { SuggestionCard as SuggestionCardType } from '../../store/suggestionsStore'
 
-const TYPE_STYLES: Record<string, string> = {
-  'QUESTION TO ASK': 'text-blue-400 border-blue-400',
-  'TALKING POINT': 'text-purple-400 border-purple-400',
-  'ANSWER': 'text-green-400 border-green-400',
-  'FACT CHECK': 'text-yellow-400 border-yellow-400',
-  'CLARIFICATION': 'text-orange-400 border-orange-400',
+const TYPE_STYLES: Record<string, { color: string; bg: string; border: string }> = {
+  'QUESTION TO ASK': {
+    color: '#6fbba8',
+    bg: 'rgba(110,187,168,0.08)',
+    border: 'rgba(110,187,168,0.25)',
+  },
+  'TALKING POINT': {
+    color: '#8ed4c4',
+    bg: 'rgba(142,212,196,0.08)',
+    border: 'rgba(142,212,196,0.25)',
+  },
+  'ANSWER': {
+    color: '#a8d8a8',
+    bg: 'rgba(168,216,168,0.08)',
+    border: 'rgba(168,216,168,0.25)',
+  },
+  'FACT CHECK': {
+    color: '#d4b896',
+    bg: 'rgba(212,184,150,0.08)',
+    border: 'rgba(212,184,150,0.25)',
+  },
+  'CLARIFICATION': {
+    color: '#b8a8d8',
+    bg: 'rgba(184,168,216,0.08)',
+    border: 'rgba(184,168,216,0.25)',
+  },
+}
+
+const DEFAULT_STYLE = {
+  color: 'var(--text-muted)',
+  bg: 'var(--bg-card)',
+  border: 'var(--border)',
 }
 
 interface Props {
@@ -14,18 +40,51 @@ interface Props {
 }
 
 export default function SuggestionCard({ card, onClick }: Props) {
-  const typeStyle = TYPE_STYLES[card.type] || 'text-gray-400 border-gray-400'
+  const style = TYPE_STYLES[card.type] || DEFAULT_STYLE
 
   return (
     <div
       onClick={() => onClick(card)}
-      className="cursor-pointer border border-gray-700 hover:border-gray-500 rounded-lg p-3 bg-gray-900 hover:bg-gray-800 transition-all"
+      style={{
+        cursor: 'pointer',
+        border: '1px solid var(--border)',
+        borderRadius: '10px',
+        padding: '14px',
+        background: 'var(--bg-base)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '8px',
+        transition: 'border-color 0.2s ease, background 0.2s ease',
+      }}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLDivElement).style.borderColor = style.border
+        ;(e.currentTarget as HTMLDivElement).style.background = style.bg
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border)'
+        ;(e.currentTarget as HTMLDivElement).style.background = 'var(--bg-base)'
+      }}
     >
-      <div className={`text-xs font-semibold border rounded px-2 py-0.5 inline-block mb-2 ${typeStyle}`}>
+      <span style={{
+        fontSize: '10px',
+        fontWeight: 600,
+        letterSpacing: '0.08em',
+        color: style.color,
+        textTransform: 'uppercase',
+        background: style.bg,
+        border: `1px solid ${style.border}`,
+        borderRadius: '4px',
+        padding: '2px 7px',
+        width: 'fit-content',
+      }}>
         {card.type}
-      </div>
-      <div className="text-sm font-medium text-white mb-1">{card.title}</div>
-      <div className="text-xs text-gray-400 leading-relaxed">{card.preview}</div>
+      </span>
+      <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', margin: 0, lineHeight: 1.4 }}>
+        {card.title}
+      </p>
+      <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.6 }}>
+        {card.preview}
+      </p>
     </div>
   )
 }

@@ -14,7 +14,7 @@ export default function ChatPanel({ pendingMessage, onPendingConsumed }: Props) 
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+  }, [messages, isStreaming])
 
   useEffect(() => {
     if (pendingMessage) {
@@ -24,30 +24,61 @@ export default function ChatPanel({ pendingMessage, onPendingConsumed }: Props) 
   }, [pendingMessage])
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="text-xs font-semibold text-gray-400 tracking-widest mb-4">
-        3. CHAT
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '16px' }}>
+
+      <div style={{ flexShrink: 0 }}>
+        <span style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.12em', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+          Chat
+        </span>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
-        {messages.length === 0 ? (
-          <p className="text-gray-500 text-sm italic">
+      <div
+        className="hide-scrollbar"
+        style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px' }}
+      >
+        {messages.length === 0 && !isStreaming ? (
+          <p style={{ fontSize: '13px', color: 'var(--text-dim)', fontStyle: 'italic', lineHeight: 1.6 }}>
             Click a suggestion or type a question below...
           </p>
         ) : (
-          messages.map((msg, index) => (
-            <ChatMessage key={index} message={msg} />
-          ))
+          messages.map((msg, index) => {
+            const isLastMessage = index === messages.length - 1
+            const isEmptyAssistant = msg.role === 'assistant' && msg.content === ''
+            if (isLastMessage && isEmptyAssistant) return null
+            return <ChatMessage key={index} message={msg} />
+          })
         )}
-        {isStreaming && (
-          <div className="text-xs text-gray-500 italic px-2 py-1">
-            Thinking...
+
+        {/* Typing indicator -- only show when streaming and last message is empty */}
+        {isStreaming && messages.length > 0 && messages[messages.length - 1].content === '' && (
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+            <div style={{
+              display: 'flex',
+              gap: '4px',
+              padding: '12px 14px',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border)',
+              borderRadius: '12px 12px 12px 3px',
+              alignItems: 'center',
+            }}>
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--primary-accent)', animation: 'bounce 1s infinite' }} />
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--primary-accent)', animation: 'bounce 1s infinite 0.15s' }} />
+              <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--primary-accent)', animation: 'bounce 1s infinite 0.3s' }} />
+            </div>
           </div>
         )}
+
         <div ref={bottomRef} />
       </div>
 
       <ChatInput onSend={sendMessage} isStreaming={isStreaming} />
+
+      <style>{`
+        @keyframes bounce {
+          0%, 100% { transform: translateY(0); opacity: 0.4; }
+          50% { transform: translateY(-4px); opacity: 1; }
+        }
+      `}</style>
     </div>
   )
 }

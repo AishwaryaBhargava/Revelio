@@ -1,31 +1,38 @@
 import { Mic, MicOff } from 'lucide-react'
 
-interface MicButtonProps {
+interface Props {
   isRecording: boolean
   onClick: () => void
 }
 
-export default function MicButton({ isRecording, onClick }: MicButtonProps) {
+export default function MicButton({ isRecording, onClick }: Props) {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
-        isRecording
-          ? 'bg-red-500 hover:bg-red-600 text-white'
-          : 'bg-gray-700 hover:bg-gray-600 text-white'
-      }`}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        padding: '10px 18px',
+        borderRadius: '10px',
+        border: isRecording
+          ? '1px solid rgba(110,187,168,0.4)'
+          : '1px solid var(--border-light)',
+        background: isRecording
+          ? 'rgba(110,187,168,0.12)'
+          : 'var(--bg-card)',
+        color: isRecording ? 'var(--primary-mid)' : 'var(--text-secondary)',
+        fontSize: '13px',
+        fontWeight: 500,
+        fontFamily: "'Outfit', sans-serif",
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+        flexShrink: 0,
+        width: 'fit-content',
+      }}
     >
-      {isRecording ? (
-        <>
-          <MicOff size={16} />
-          Stop Recording
-        </>
-      ) : (
-        <>
-          <Mic size={16} />
-          Start Recording
-        </>
-      )}
+      {isRecording ? <MicOff size={15} /> : <Mic size={15} />}
+      {isRecording ? 'Stop Recording' : 'Start Recording'}
     </button>
   )
 }

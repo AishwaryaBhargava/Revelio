@@ -9,8 +9,10 @@ interface Props {
 
 export default function SuggestionBatch({ batch, isLatest, onCardClick }: Props) {
   return (
-    <div className={`space-y-2 ${!isLatest ? 'opacity-40' : ''}`}>
-      <div className="text-xs text-gray-600 mb-1">{batch.timestamp}</div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', opacity: isLatest ? 1 : 0.4, transition: 'opacity 0.2s ease' }}>
+      <span style={{ fontSize: '10px', color: 'var(--text-dim)', letterSpacing: '0.04em' }}>
+        {batch.timestamp}
+      </span>
       {batch.cards.map((card, index) => (
         <SuggestionCard key={index} card={card} onClick={onCardClick} />
       ))}

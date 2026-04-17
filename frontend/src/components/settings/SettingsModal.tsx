@@ -20,29 +20,59 @@ export default function SettingsModal({ isOpen, onClose }: Props) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center"
       onClick={onClose}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0,0,0,0.6)',
+        backdropFilter: 'blur(4px)',
+        zIndex: 50,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
     >
       <div
-        className="bg-gray-900 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 mx-4"
         onClick={(e) => e.stopPropagation()}
+        style={{
+          background: 'var(--bg-panel)',
+          border: '1px solid var(--border-light)',
+          borderRadius: '16px',
+          width: '100%',
+          maxWidth: '580px',
+          maxHeight: '90vh',
+          overflowY: 'auto',
+          padding: '28px',
+          margin: '0 16px',
+        }}
+        className="hide-scrollbar"
       >
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-white">Settings</h2>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+          <span style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)' }}>Settings</span>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors"
+            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
         <SettingsForm />
 
-        <div className="mt-6 flex justify-end">
+        <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm rounded-lg transition-all"
+            style={{
+              padding: '10px 20px',
+              borderRadius: '10px',
+              border: '1px solid var(--border-light)',
+              background: 'rgba(110,187,168,0.12)',
+              color: 'var(--primary-mid)',
+              fontSize: '13px',
+              fontFamily: "'Outfit', sans-serif",
+              fontWeight: 500,
+              cursor: 'pointer',
+            }}
           >
             Save and Close
           </button>
