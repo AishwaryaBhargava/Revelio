@@ -5,26 +5,34 @@ import TranscriptPanel from '../components/transcript/TranscriptPanel'
 import SuggestionsPanel from '../components/suggestions/SuggestionsPanel'
 import ChatPanel from '../components/chat/ChatPanel'
 import SettingsModal from '../components/settings/SettingsModal'
+import ErrorModal from '../components/ErrorModal'
+import BottomNav from '../components/BottomNav'
+import type { TabType } from '../components/BottomNav'
 import { useMic } from '../hooks/useMic'
 import { useSuggestions } from '../hooks/useSuggestions'
+import { useWindowSize } from '../hooks/useWindowSize'
 import { useTranscriptStore } from '../store/transcriptStore'
 import { useSuggestionsStore } from '../store/suggestionsStore'
 import { useChatStore } from '../store/chatStore'
 import { useSettingsStore } from '../store/settingsStore'
-import revelioLogo from '../assets/revelio-logo.svg'
-import ErrorModal from '../components/ErrorModal'
 
 export default function Landing() {
   const [backendStatus, setBackendStatus] = useState('checking...')
   const [pendingMessage, setPendingMessage] = useState<{ title: string; cardContext?: string } | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<TabType>('transcript')
+  const [hasNewSuggestions, setHasNewSuggestions] = useState(false)
+  const [hasNewChat, setHasNewChat] = useState(false)
+
   const { isRecording, error, startMic, stopMic } = useMic()
   const { fetchSuggestions } = useSuggestions()
+  const { isMobile } = useWindowSize()
+
   const transcriptChunks = useTranscriptStore((s) => s.chunks)
   const suggestionBatches = useSuggestionsStore((s) => s.batches)
   const chatMessages = useChatStore((s) => s.messages)
   const groqApiKey = useSettingsStore((s) => s.groqApiKey)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   useEffect(() => {
     api.get('/health')
@@ -42,11 +50,31 @@ export default function Landing() {
     return () => window.removeEventListener('revelio:auth-error', handleAuthError)
   }, [stopMic])
 
+  // Badge logic for mobile tabs
+  useEffect(() => {
+    if (activeTab !== 'suggestions' && suggestionBatches.length > 0) {
+      setHasNewSuggestions(true)
+    }
+  }, [suggestionBatches])
+
+  useEffect(() => {
+    if (activeTab !== 'chat' && chatMessages.length > 0) {
+      setHasNewChat(true)
+    }
+  }, [chatMessages])
+
+  function handleTabChange(tab: TabType) {
+    setActiveTab(tab)
+    if (tab === 'suggestions') setHasNewSuggestions(false)
+    if (tab === 'chat') setHasNewChat(false)
+  }
+
   function handleCardClick(card: { type: string; title: string; preview: string }) {
     setPendingMessage({
       title: card.title,
       cardContext: `Type: ${card.type}\nPreview: ${card.preview}`,
     })
+    if (isMobile) setActiveTab('chat')
   }
 
   function handleExport() {
@@ -66,22 +94,74 @@ export default function Landing() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', background: 'var(--bg-base)', color: 'var(--text-primary)', overflow: 'hidden', fontFamily: "'Outfit', sans-serif" }}>
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100vh',
+      width: '100vw',
+      background: 'var(--bg-base)',
+      color: 'var(--text-primary)',
+      overflow: 'hidden',
+      fontFamily: "'Outfit', sans-serif",
+    }}>
 
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 28px', height: '56px', borderBottom: '1px solid var(--border)', flexShrink: 0, background: 'var(--bg-panel)' }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: isMobile ? '0 16px' : '0 28px',
+        height: '56px',
+        borderBottom: '1px solid var(--border)',
+        flexShrink: 0,
+        background: 'var(--bg-panel)',
+      }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <img src={revelioLogo} alt="Revelio logo" style={{ width: '32px', height: '32px' }} />
-          <span style={{ fontSize: '18px', fontWeight: 600, letterSpacing: '0.04em', color: 'var(--primary)' }}>Revelio</span>
+          <img src="/revelio-logo.svg" alt="Revelio logo" style={{ width: '28px', height: '28px' }} />
+          <span style={{ fontSize: '18px', fontWeight: 600, letterSpacing: '0.04em', color: 'var(--primary)' }}>
+            Revelio
+          </span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <button onClick={handleExport} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 14px', borderRadius: '8px', border: '1px solid var(--border-light)', background: 'transparent', color: 'var(--text-secondary)', fontSize: '13px', fontFamily: "'Outfit', sans-serif", cursor: 'pointer', fontWeight: 500 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button
+            onClick={handleExport}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: isMobile ? '0' : '6px',
+              padding: isMobile ? '7px 10px' : '7px 14px',
+              borderRadius: '8px',
+              border: '1px solid var(--border-light)',
+              background: 'transparent',
+              color: 'var(--text-secondary)',
+              fontSize: '13px',
+              fontFamily: "'Outfit', sans-serif",
+              cursor: 'pointer',
+              fontWeight: 500,
+            }}
+          >
             <Download size={13} />
-            Export
+            {!isMobile && 'Export'}
           </button>
-          <button onClick={() => setSettingsOpen(true)} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 14px', borderRadius: '8px', border: '1px solid var(--border-light)', background: 'transparent', color: 'var(--text-secondary)', fontSize: '13px', fontFamily: "'Outfit', sans-serif", cursor: 'pointer', fontWeight: 500 }}>
+          <button
+            onClick={() => setSettingsOpen(true)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: isMobile ? '0' : '6px',
+              padding: isMobile ? '7px 10px' : '7px 14px',
+              borderRadius: '8px',
+              border: '1px solid var(--border-light)',
+              background: 'transparent',
+              color: 'var(--text-secondary)',
+              fontSize: '13px',
+              fontFamily: "'Outfit', sans-serif",
+              cursor: 'pointer',
+              fontWeight: 500,
+            }}
+          >
             <Settings size={13} />
-            Settings
+            {!isMobile && 'Settings'}
           </button>
         </div>
       </div>
@@ -101,7 +181,7 @@ export default function Landing() {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#8ed4c4', flexShrink: 0 }} />
-            <span>No Groq API key set. Add your key in Settings before recording.</span>
+            <span>{isMobile ? 'No API key set.' : 'No Groq API key set. Add your key in Settings before recording.'}</span>
           </div>
           <button
             onClick={() => setSettingsOpen(true)}
@@ -123,30 +203,94 @@ export default function Landing() {
         </div>
       )}
 
-      {/* 3-column layout */}
-      <div style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
-
-        {/* Left - Transcript */}
-        <div style={{ display: 'flex', flexDirection: 'column', width: '33.333%', borderRight: '1px solid var(--border)', padding: '20px', overflow: 'hidden' }}>
-          <TranscriptPanel isRecording={isRecording} error={error} startMic={startMic} stopMic={stopMic} />
+      {/* Recording banner on mobile when not on transcript tab */}
+      {isMobile && isRecording && activeTab !== 'transcript' && (
+        <div style={{
+          background: 'rgba(110,187,168,0.08)',
+          borderBottom: '1px solid var(--border)',
+          padding: '6px 16px',
+          fontSize: '11px',
+          color: 'var(--primary-accent)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+        }}>
+          <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--primary-accent)', animation: 'pulse 1.5s infinite' }} />
+          Recording in progress
+          <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }`}</style>
         </div>
+      )}
 
-        {/* Middle - Suggestions */}
-        <div style={{ display: 'flex', flexDirection: 'column', width: '33.333%', borderRight: '1px solid var(--border)', padding: '20px', overflow: 'hidden', background: 'var(--bg-panel)' }}>
-          <SuggestionsPanel isRecording={isRecording} onCardClick={handleCardClick} fetchSuggestions={fetchSuggestions} />
+      {/* Main content */}
+      {isMobile ? (
+        // Mobile: single panel based on active tab
+        <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', padding: '16px' }}>
+          {activeTab === 'transcript' && (
+            <TranscriptPanel
+              isRecording={isRecording}
+              error={error}
+              startMic={startMic}
+              stopMic={stopMic}
+            />
+          )}
+          {activeTab === 'suggestions' && (
+            <SuggestionsPanel
+              isRecording={isRecording}
+              onCardClick={handleCardClick}
+              fetchSuggestions={fetchSuggestions}
+            />
+          )}
+          {activeTab === 'chat' && (
+            <ChatPanel
+              pendingMessage={pendingMessage}
+              onPendingConsumed={() => setPendingMessage(null)}
+            />
+          )}
         </div>
-
-        {/* Right - Chat */}
-        <div style={{ display: 'flex', flexDirection: 'column', width: '33.333%', padding: '20px', overflow: 'hidden' }}>
-          <ChatPanel pendingMessage={pendingMessage} onPendingConsumed={() => setPendingMessage(null)} />
+      ) : (
+        // Desktop: 3-column layout
+        <div style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', width: '33.333%', borderRight: '1px solid var(--border)', padding: '20px', overflow: 'hidden' }}>
+            <TranscriptPanel
+              isRecording={isRecording}
+              error={error}
+              startMic={startMic}
+              stopMic={stopMic}
+            />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', width: '33.333%', borderRight: '1px solid var(--border)', padding: '20px', overflow: 'hidden', background: 'var(--bg-panel)' }}>
+            <SuggestionsPanel
+              isRecording={isRecording}
+              onCardClick={handleCardClick}
+              fetchSuggestions={fetchSuggestions}
+            />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', width: '33.333%', padding: '20px', overflow: 'hidden' }}>
+            <ChatPanel
+              pendingMessage={pendingMessage}
+              onPendingConsumed={() => setPendingMessage(null)}
+            />
+          </div>
         </div>
+      )}
 
-      </div>
+      {/* Bottom nav -- mobile only */}
+      {isMobile && (
+        <BottomNav
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          isRecording={isRecording}
+          hasNewSuggestions={hasNewSuggestions}
+          hasNewChat={hasNewChat}
+        />
+      )}
 
-      {/* Backend status */}
-      <div style={{ position: 'fixed', bottom: '12px', right: '16px', fontSize: '11px', color: 'var(--text-dim)', letterSpacing: '0.03em' }}>
-        {backendStatus === 'connected' ? '● connected' : '○ disconnected'}
-      </div>
+      {/* Backend status -- desktop only */}
+      {!isMobile && (
+        <div style={{ position: 'fixed', bottom: '12px', right: '16px', fontSize: '11px', color: 'var(--text-dim)', letterSpacing: '0.03em' }}>
+          {backendStatus === 'connected' ? '● connected' : '○ disconnected'}
+        </div>
+      )}
 
       {errorMessage && (
         <ErrorModal
@@ -156,7 +300,10 @@ export default function Landing() {
         />
       )}
 
-      <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <SettingsModal
+        isOpen={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+      />
     </div>
   )
 }

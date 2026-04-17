@@ -16,13 +16,15 @@ interface Props {
 export default function ChatPanel({ pendingMessage, onPendingConsumed }: Props) {
   const { messages, isStreaming, sendMessage } = useChat()
   const bottomRef = useRef<HTMLDivElement>(null)
+  const consumedRef = useRef<string | null>(null)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isStreaming])
 
   useEffect(() => {
-    if (pendingMessage) {
+    if (pendingMessage && pendingMessage.title !== consumedRef.current) {
+      consumedRef.current = pendingMessage.title
       sendMessage(pendingMessage.title, pendingMessage.cardContext)
       onPendingConsumed?.()
     }
