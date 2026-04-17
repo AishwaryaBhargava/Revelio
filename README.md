@@ -9,7 +9,7 @@ Revelio is a real-time AI copilot that listens to your conversations and surface
 
 | | URL |
 |---|---|
-| Frontend | *(added after deploy)* |
+| Frontend | https://revelio-iota.vercel.app/ |
 | Backend | https://revelio-d4r4.onrender.com |
 
 ---
