@@ -1,6 +1,7 @@
 import { useCallback } from 'react'
 import { useChatStore } from '../store/chatStore'
 import { useTranscriptStore } from '../store/transcriptStore'
+import { useSettingsStore } from '../store/settingsStore'
 
 export function useChat() {
   const { messages, isStreaming, addMessage, appendToLast, setStreaming } = useChatStore()
@@ -13,6 +14,13 @@ export function useChat() {
       role: m.role,
       content: m.content,
     }))
+    const apiKey = useSettingsStore.getState().groqApiKey
+
+    if (!apiKey) {
+      addMessage('user', content)
+      addMessage('assistant', 'No Groq API key found. Please open Settings and add your key before chatting.')
+      return
+    }
 
     addMessage('user', content)
     addMessage('assistant', '')
@@ -21,13 +29,22 @@ export function useChat() {
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/chat`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Groq-API-Key': apiKey,
+        },
         body: JSON.stringify({
           message: content,
           transcript,
           history,
         }),
       })
+
+      if (!response.ok) {
+        const error = await response.json()
+        appendToLast(error.detail || 'Something went wrong. Please try again.')
+        return
+      }
 
       if (!response.body) throw new Error('No response body')
 
@@ -42,7 +59,7 @@ export function useChat() {
       }
     } catch (err) {
       console.error('Chat error:', err)
-      appendToLast('Sorry, something went wrong. Please try again.')
+      appendToLast('Something went wrong. Please try again.')
     } finally {
       setStreaming(false)
     }

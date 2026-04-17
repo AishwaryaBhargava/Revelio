@@ -5,7 +5,6 @@ import TranscriptPanel from '../components/transcript/TranscriptPanel'
 import SuggestionsPanel from '../components/suggestions/SuggestionsPanel'
 import ChatPanel from '../components/chat/ChatPanel'
 import SettingsModal from '../components/settings/SettingsModal'
-import Toast from '../components/Toast'
 import { useMic } from '../hooks/useMic'
 import { useSuggestions } from '../hooks/useSuggestions'
 import { useTranscriptStore } from '../store/transcriptStore'
@@ -13,24 +12,35 @@ import { useSuggestionsStore } from '../store/suggestionsStore'
 import { useChatStore } from '../store/chatStore'
 import { useSettingsStore } from '../store/settingsStore'
 import revelioLogo from '../assets/revelio-logo.svg'
+import ErrorModal from '../components/ErrorModal'
 
 export default function Landing() {
   const [backendStatus, setBackendStatus] = useState('checking...')
   const [pendingMessage, setPendingMessage] = useState<string | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const [toastMessage, setToastMessage] = useState<string | null>(null)
   const { isRecording, error, startMic, stopMic } = useMic()
   const { fetchSuggestions } = useSuggestions()
   const transcriptChunks = useTranscriptStore((s) => s.chunks)
   const suggestionBatches = useSuggestionsStore((s) => s.batches)
   const chatMessages = useChatStore((s) => s.messages)
   const groqApiKey = useSettingsStore((s) => s.groqApiKey)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   useEffect(() => {
     api.get('/health')
       .then(() => setBackendStatus('connected'))
       .catch(() => setBackendStatus('error'))
   }, [])
+
+  useEffect(() => {
+    function handleAuthError(e: Event) {
+      const detail = (e as CustomEvent).detail
+      setErrorMessage(detail)
+      stopMic()
+    }
+    window.addEventListener('revelio:auth-error', handleAuthError)
+    return () => window.removeEventListener('revelio:auth-error', handleAuthError)
+  }, [stopMic])
 
   function handleCardClick(card: { type: string; title: string; preview: string }) {
     setPendingMessage(`${card.title}: ${card.preview}`)
@@ -135,7 +145,14 @@ export default function Landing() {
         {backendStatus === 'connected' ? '● connected' : '○ disconnected'}
       </div>
 
-      {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} />}
+      {errorMessage && (
+        <ErrorModal
+          message={errorMessage}
+          onClose={() => setErrorMessage(null)}
+          onOpenSettings={() => setSettingsOpen(true)}
+        />
+      )}
+
       <SettingsModal isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </div>
   )

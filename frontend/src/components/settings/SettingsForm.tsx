@@ -21,6 +21,8 @@ const inputStyle = {
   fontFamily: "'Outfit', sans-serif",
   outline: 'none',
   boxSizing: 'border-box' as const,
+  appearance: 'none' as const,
+  MozAppearance: 'textfield' as const,
 }
 
 export default function SettingsForm() {
@@ -82,21 +84,45 @@ export default function SettingsForm() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
         <div>
           <Label>Context Window (words)</Label>
-          <input
-            type="number"
-            value={contextWindowWords}
-            onChange={(e) => setContextWindowWords(Number(e.target.value))}
-            style={inputStyle}
-          />
+          <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border)', borderRadius: '8px', overflow: 'hidden', background: 'var(--bg-input)' }}>
+            <input
+              type="number"
+              value={contextWindowWords}
+              onChange={(e) => setContextWindowWords(Number(e.target.value))}
+              style={{ ...inputStyle, border: 'none', flex: 1, borderRadius: 0 }}
+            />
+            <div style={{ display: 'flex', flexDirection: 'column', borderLeft: '1px solid var(--border)' }}>
+              <button
+                onClick={() => setContextWindowWords(contextWindowWords + 50)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px 8px', fontSize: '10px', borderBottom: '1px solid var(--border)', fontFamily: "'Outfit', sans-serif" }}
+              >▲</button>
+              <button
+                onClick={() => setContextWindowWords(Math.max(50, contextWindowWords - 50))}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px 8px', fontSize: '10px', fontFamily: "'Outfit', sans-serif" }}
+              >▼</button>
+            </div>
+          </div>
         </div>
         <div>
           <Label>Chat Max Tokens</Label>
-          <input
-            type="number"
-            value={chatMaxTokens}
-            onChange={(e) => setChatMaxTokens(Number(e.target.value))}
-            style={inputStyle}
-          />
+          <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border)', borderRadius: '8px', overflow: 'hidden', background: 'var(--bg-input)' }}>
+            <input
+              type="number"
+              value={chatMaxTokens}
+              onChange={(e) => setChatMaxTokens(Number(e.target.value))}
+              style={{ ...inputStyle, border: 'none', flex: 1, borderRadius: 0 }}
+            />
+            <div style={{ display: 'flex', flexDirection: 'column', borderLeft: '1px solid var(--border)' }}>
+              <button
+                onClick={() => setChatMaxTokens(chatMaxTokens + 100)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px 8px', fontSize: '10px', borderBottom: '1px solid var(--border)', fontFamily: "'Outfit', sans-serif" }}
+              >▲</button>
+              <button
+                onClick={() => setChatMaxTokens(Math.max(100, chatMaxTokens - 100))}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px 8px', fontSize: '10px', fontFamily: "'Outfit', sans-serif" }}
+              >▼</button>
+            </div>
+          </div>
         </div>
       </div>
 

@@ -64,3 +64,20 @@ html, body, #root {
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* Hide number input spinners */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type='number'] {
+  -moz-appearance: textfield;
+}
+
+/* Settings textarea focus */
+textarea:focus,
+input:focus {
+  border-color: var(--border-light) !important;
+}

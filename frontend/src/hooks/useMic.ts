@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useCallback } from 'react'
 import api from '../services/api'
 import { useTranscriptStore } from '../store/transcriptStore'
 import { useSuggestionsStore } from '../store/suggestionsStore'
@@ -8,7 +8,6 @@ const CHUNK_INTERVAL_MS = 30000
 async function fetchSuggestionsNow() {
   const chunks = useTranscriptStore.getState().chunks
   const transcript = chunks.map((c) => c.text).join(' ')
-  console.log('Fetching suggestions, transcript length:', transcript.length)
   const { setLoading, addBatch } = useSuggestionsStore.getState()
   setLoading(true)
   try {
@@ -17,8 +16,12 @@ async function fetchSuggestionsNow() {
       context_window_words: 400,
     })
     addBatch(response.data.cards)
-  } catch (err) {
-    console.error('Suggestions error:', err)
+  } catch (err: any) {
+    if (err?.response?.status === 401) {
+      window.dispatchEvent(new CustomEvent('revelio:auth-error', { detail: 'Invalid or missing Groq API key. Please check your key in Settings.' }))
+    } else {
+      console.error('Suggestions error:', err)
+    }
   } finally {
     setLoading(false)
   }
@@ -36,8 +39,12 @@ async function sendAudioChunk(blob: Blob) {
       useTranscriptStore.getState().addChunk(response.data.text.trim())
       await fetchSuggestionsNow()
     }
-  } catch (err) {
-    console.error('Transcription error:', err)
+  } catch (err: any) {
+    if (err?.response?.status === 401) {
+      window.dispatchEvent(new CustomEvent('revelio:auth-error', { detail: 'Invalid or missing Groq API key. Please check your key in Settings.' }))
+    } else {
+      console.error('Transcription error:', err)
+    }
   }
 }
 
@@ -66,7 +73,7 @@ export function useMic() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  async function startMic() {
+  const startMic = useCallback(async () => {
     setError(null)
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
@@ -86,9 +93,9 @@ export function useMic() {
     } catch (err) {
       setError('Microphone access denied. Please allow mic permission and try again.')
     }
-  }
+  }, [])
 
-  function stopMic() {
+  const stopMic = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current)
       intervalRef.current = null
@@ -101,7 +108,7 @@ export function useMic() {
       streamRef.current = null
     }
     setIsRecording(false)
-  }
+  }, [])
 
   return { isRecording, error, startMic, stopMic }
 }

@@ -1,4 +1,4 @@
 from groq import Groq
-from app.core.config import settings
 
-client = Groq(api_key=settings.GROQ_API_KEY)
+def get_groq_client(api_key: str) -> Groq:
+    return Groq(api_key=api_key)
