@@ -6,7 +6,7 @@ import { useSettingsStore } from '../store/settingsStore'
 export function useChat() {
   const { messages, isStreaming, addMessage, appendToLast, setStreaming } = useChatStore()
 
-  const sendMessage = useCallback(async (content: string) => {
+  const sendMessage = useCallback(async (content: string, cardContext?: string) => {
     if (!content.trim() || isStreaming) return
 
     const transcript = useTranscriptStore.getState().chunks.map((c) => c.text).join(' ')
@@ -37,6 +37,7 @@ export function useChat() {
           message: content,
           transcript,
           history,
+          card_context: cardContext || null,
         }),
       })
 

@@ -1,3 +1,5 @@
+from typing import Optional
+
 def get_recent_transcript(transcript: str, word_limit: int) -> str:
     words = transcript.strip().split()
     if len(words) <= word_limit:
@@ -52,7 +54,31 @@ Respond ONLY with valid JSON in this exact format, no explanation, no markdown:
 }}"""
 
 
-def build_chat_prompt(transcript: str, user_message: str) -> str:
+def build_chat_prompt(transcript: str, user_message: str, card_context: Optional[str] = None) -> str:
+    card_section = ''
+    if card_context:
+        card_section = f"""
+The user clicked a suggestion card with this context:
+<card_context>
+{card_context}
+</card_context>
+Use this as additional grounding for your answer alongside the transcript.
+"""
+
+    return f"""You are a real-time meeting intelligence assistant with access to the full conversation transcript.
+
+<transcript>
+{transcript}
+</transcript>
+{card_section}
+The user asks: {user_message}
+
+Instructions:
+- Be concise and direct. 3-5 sentences maximum unless a list is genuinely needed.
+- Reference specific things from the transcript where relevant.
+- Use simple markdown only: bold for key terms, bullet points if listing 3+ items.
+- Never use tables. Never pad with unnecessary explanation.
+- Lead with the answer, not the context."""
     return f"""You are a real-time meeting intelligence assistant with access to the full conversation transcript.
 
 <transcript>

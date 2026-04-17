@@ -3,8 +3,13 @@ import { useChat } from '../../hooks/useChat'
 import ChatMessage from './ChatMessage'
 import ChatInput from './ChatInput'
 
+interface PendingMessage {
+  title: string
+  cardContext?: string
+}
+
 interface Props {
-  pendingMessage?: string | null
+  pendingMessage?: PendingMessage | null
   onPendingConsumed?: () => void
 }
 
@@ -18,7 +23,7 @@ export default function ChatPanel({ pendingMessage, onPendingConsumed }: Props) 
 
   useEffect(() => {
     if (pendingMessage) {
-      sendMessage(pendingMessage)
+      sendMessage(pendingMessage.title, pendingMessage.cardContext)
       onPendingConsumed?.()
     }
   }, [pendingMessage])
@@ -49,9 +54,8 @@ export default function ChatPanel({ pendingMessage, onPendingConsumed }: Props) 
           })
         )}
 
-        {/* Typing indicator -- only show when streaming and last message is empty */}
         {isStreaming && messages.length > 0 && messages[messages.length - 1].content === '' && (
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start' }}>
             <div style={{
               display: 'flex',
               gap: '4px',

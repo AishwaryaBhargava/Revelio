@@ -2,10 +2,10 @@ from groq import AuthenticationError
 from fastapi import HTTPException
 from app.services.groq_client import get_groq_client
 from app.utils.prompt_builder import build_chat_prompt
-from typing import Generator
+from typing import Generator, Optional
 
-def stream_chat_response(message: str, transcript: str, history: list, api_key: str) -> Generator:
-    prompt = build_chat_prompt(transcript, message)
+def stream_chat_response(message: str, transcript: str, history: list, api_key: str, card_context: Optional[str] = None) -> Generator:
+    prompt = build_chat_prompt(transcript, message, card_context)
     client = get_groq_client(api_key)
 
     messages = [{"role": "system", "content": prompt}]

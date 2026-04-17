@@ -16,7 +16,7 @@ import ErrorModal from '../components/ErrorModal'
 
 export default function Landing() {
   const [backendStatus, setBackendStatus] = useState('checking...')
-  const [pendingMessage, setPendingMessage] = useState<string | null>(null)
+  const [pendingMessage, setPendingMessage] = useState<{ title: string; cardContext?: string } | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const { isRecording, error, startMic, stopMic } = useMic()
   const { fetchSuggestions } = useSuggestions()
@@ -43,7 +43,10 @@ export default function Landing() {
   }, [stopMic])
 
   function handleCardClick(card: { type: string; title: string; preview: string }) {
-    setPendingMessage(`${card.title}: ${card.preview}`)
+    setPendingMessage({
+      title: card.title,
+      cardContext: `Type: ${card.type}\nPreview: ${card.preview}`,
+    })
   }
 
   function handleExport() {

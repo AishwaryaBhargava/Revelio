@@ -19,7 +19,8 @@ async def chat(
             message=request.message,
             transcript=request.transcript,
             history=[m.dict() for m in request.history],
-            api_key=x_groq_api_key
+            api_key=x_groq_api_key,
+            card_context=request.card_context
         ):
             yield token
 
