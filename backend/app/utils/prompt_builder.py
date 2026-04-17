@@ -53,9 +53,8 @@ Respond ONLY with valid JSON in this exact format, no explanation, no markdown:
 
 
 def build_chat_prompt(transcript: str, user_message: str) -> str:
-    return f"""You are a real-time meeting intelligence assistant. You have access to the full transcript of an ongoing conversation. A user has asked you a question or clicked on a suggestion and wants a detailed, grounded answer.
+    return f"""You are a real-time meeting intelligence assistant with access to the full conversation transcript.
 
-Here is the full conversation transcript so far:
 <transcript>
 {transcript}
 </transcript>
@@ -63,7 +62,8 @@ Here is the full conversation transcript so far:
 The user asks: {user_message}
 
 Instructions:
-- Give a thorough, substantive answer grounded in what was actually said in the transcript
-- Reference specific things from the conversation where relevant
-- Be direct and useful, avoid padding or generic statements
-- Use markdown formatting where it helps clarity (bullet points, bold, etc.)"""
+- Be concise and direct. 3-5 sentences maximum unless a list is genuinely needed.
+- Reference specific things from the transcript where relevant.
+- Use simple markdown only: bold for key terms, bullet points if listing 3+ items.
+- Never use tables. Never pad with unnecessary explanation.
+- Lead with the answer, not the context."""

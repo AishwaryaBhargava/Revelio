@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react'
 import api from '../services/api'
 import TranscriptPanel from '../components/transcript/TranscriptPanel'
 import SuggestionsPanel from '../components/suggestions/SuggestionsPanel'
+import ChatPanel from '../components/chat/ChatPanel'
 import { useMic } from '../hooks/useMic'
 import { useSuggestions } from '../hooks/useSuggestions'
 
 export default function Landing() {
   const [backendStatus, setBackendStatus] = useState('checking...')
+  const [pendingMessage, setPendingMessage] = useState<string | null>(null)
   const { isRecording, error, startMic, stopMic } = useMic()
   const { fetchSuggestions } = useSuggestions()
 
@@ -17,7 +19,7 @@ export default function Landing() {
   }, [])
 
   function handleCardClick(card: { type: string; title: string; preview: string }) {
-    console.log('Card clicked:', card)
+    setPendingMessage(`${card.title}: ${card.preview}`)
   }
 
   return (
@@ -44,12 +46,10 @@ export default function Landing() {
 
       {/* Right Column - Chat */}
       <div className="flex flex-col w-1/3 p-4">
-        <div className="text-xs font-semibold text-gray-400 tracking-widest mb-4">
-          3. CHAT
-        </div>
-        <div className="flex-1 overflow-y-auto text-sm text-gray-300">
-          Chat will appear here...
-        </div>
+        <ChatPanel
+          pendingMessage={pendingMessage}
+          onPendingConsumed={() => setPendingMessage(null)}
+        />
       </div>
 
       {/* Backend status indicator */}
