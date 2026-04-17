@@ -1,77 +1,91 @@
 import { useRef, useState } from 'react'
 import api from '../services/api'
 import { useTranscriptStore } from '../store/transcriptStore'
+import { useSuggestionsStore } from '../store/suggestionsStore'
 
 const CHUNK_INTERVAL_MS = 30000
+
+async function fetchSuggestionsNow() {
+  const chunks = useTranscriptStore.getState().chunks
+  const transcript = chunks.map((c) => c.text).join(' ')
+  console.log('Fetching suggestions, transcript length:', transcript.length)
+  const { setLoading, addBatch } = useSuggestionsStore.getState()
+  setLoading(true)
+  try {
+    const response = await api.post('/suggestions', {
+      transcript,
+      context_window_words: 400,
+    })
+    addBatch(response.data.cards)
+  } catch (err) {
+    console.error('Suggestions error:', err)
+  } finally {
+    setLoading(false)
+  }
+}
+
+async function sendAudioChunk(blob: Blob) {
+  if (blob.size === 0) return
+  try {
+    const formData = new FormData()
+    formData.append('file', blob, 'audio.webm')
+    const response = await api.post('/transcribe', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    if (response.data.text?.trim()) {
+      useTranscriptStore.getState().addChunk(response.data.text.trim())
+      await fetchSuggestionsNow()
+    }
+  } catch (err) {
+    console.error('Transcription error:', err)
+  }
+}
+
+function createRecorder(stream: MediaStream): MediaRecorder {
+  const chunks: BlobPart[] = []
+  const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' })
+
+  recorder.ondataavailable = (e) => {
+    if (e.data.size > 0) chunks.push(e.data)
+  }
+
+  recorder.onstop = () => {
+    const blob = new Blob(chunks, { type: 'audio/webm' })
+    sendAudioChunk(blob)
+    chunks.length = 0
+  }
+
+  recorder.start()
+  return recorder
+}
 
 export function useMic() {
   const [isRecording, setIsRecording] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const streamRef = useRef<MediaStream | null>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const addChunk = useTranscriptStore((s) => s.addChunk)
-
-  async function sendAudioChunk(blob: Blob) {
-    if (blob.size === 0) return
-    try {
-      const formData = new FormData()
-      formData.append('file', blob, 'audio.webm')
-      const response = await api.post('/transcribe', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
-      if (response.data.text?.trim()) {
-        addChunk(response.data.text.trim())
-      }
-    } catch (err) {
-      console.error('Transcription error:', err)
-    }
-  }
 
   async function startMic() {
     setError(null)
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      startRecordingCycle(stream)
+      streamRef.current = stream
+      mediaRecorderRef.current = createRecorder(stream)
+
+      intervalRef.current = setInterval(() => {
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+          mediaRecorderRef.current.stop()
+        }
+        if (streamRef.current) {
+          mediaRecorderRef.current = createRecorder(streamRef.current)
+        }
+      }, CHUNK_INTERVAL_MS)
+
       setIsRecording(true)
     } catch (err) {
       setError('Microphone access denied. Please allow mic permission and try again.')
     }
-  }
-
-  function startRecordingCycle(stream: MediaStream) {
-    const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' })
-    mediaRecorderRef.current = recorder
-
-    const chunks: BlobPart[] = []
-    recorder.ondataavailable = (e) => {
-      if (e.data.size > 0) chunks.push(e.data)
-    }
-    recorder.onstop = () => {
-      const blob = new Blob(chunks, { type: 'audio/webm' })
-      sendAudioChunk(blob)
-      chunks.length = 0
-    }
-
-    recorder.start()
-
-    intervalRef.current = setInterval(() => {
-      if (recorder.state === 'recording') {
-        recorder.stop()
-        const newRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' })
-        mediaRecorderRef.current = newRecorder
-        const newChunks: BlobPart[] = []
-        newRecorder.ondataavailable = (e) => {
-          if (e.data.size > 0) newChunks.push(e.data)
-        }
-        newRecorder.onstop = () => {
-          const blob = new Blob(newChunks, { type: 'audio/webm' })
-          sendAudioChunk(blob)
-          newChunks.length = 0
-        }
-        newRecorder.start()
-        mediaRecorderRef.current = newRecorder
-      }
-    }, CHUNK_INTERVAL_MS)
   }
 
   function stopMic() {
@@ -81,6 +95,10 @@ export function useMic() {
     }
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
       mediaRecorderRef.current.stop()
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop())
+      streamRef.current = null
     }
     setIsRecording(false)
   }
